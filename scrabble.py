@@ -105,9 +105,9 @@ def canUnlock(i, j):
 
     # Top-down
     if currentWord[size - 1]['posJ'] == currentWord[size - 2]['posJ']:
-        return currentWord[size - 1]['posJ'] == j
+        return currentWord[size - 1]['posJ'] == j and currentWord[size - 1]['posI'] + 1 == i
     # Right-left
-    return currentWord[size - 1]['posI'] == i
+    return currentWord[size - 1]['posI'] == i and currentWord[size - 1]['posJ'] + 1 == j
 # Select a letter from the available ones
 def selectLetter(buttonIndex):
     global valueSelected
