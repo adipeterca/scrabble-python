@@ -13,6 +13,10 @@ letterValue = { }
 # For use in selecting a letter and placing it on the board
 valueSelected = ''
 
+# Current word
+# It is a list of dicts: 'letter', 'posI', 'posJ'
+currentWord = []
+
 # Color corrections
 #   Light red : double word value #ff4fc4
 #   Dark red : triple word value #f00c4d
@@ -85,6 +89,25 @@ def colorCorrections(board):
     board[14][3]['bg'] = '#5e79ff'
     board[14][11]['bg'] = '#5e79ff'
 
+# Unlocks only the buttons on the board that represent a right placement for the next letter (top-down or right-left)
+def canUnlock(i, j):
+    global currentWord
+
+    size = len(currentWord)
+
+    # If no letter was written, it can be placed anywhere
+    if size == 0:
+        return True
+
+    # If only a letter was placed, it can be either top-bottom or right-left
+    if size == 1:
+        return currentWord[0]['posI'] == i and currentWord[0]['posJ'] + 1 == j or currentWord[0]['posI'] + 1 == i and currentWord[0]['posJ'] == j
+
+    # Top-down
+    if currentWord[size - 1]['posJ'] == currentWord[size - 2]['posJ']:
+        return currentWord[size - 1]['posJ'] == j
+    # Right-left
+    return currentWord[size - 1]['posI'] == i
 # Select a letter from the available ones
 def selectLetter(buttonIndex):
     global valueSelected
@@ -101,7 +124,7 @@ def selectLetter(buttonIndex):
     for i in range(15):
         for j in range(15):
             # Unlock only the free ones
-            if board[i][j]['text'] == ' ':
+            if board[i][j]['text'] == ' ' and canUnlock(i, j):
                 board[i][j]['state'] = 'normal'
 
     # Should also make the 'apply word' and 'skip turn' buttons disabled
@@ -109,8 +132,12 @@ def selectLetter(buttonIndex):
 
 # Actually puts the letter on the board
 def putLetter(buttonIndexI, buttonIndexJ):
-    global valueSelected
+    global valueSelected, currentWord
+
     board[buttonIndexI][buttonIndexJ]['text'] = valueSelected
+
+    # Store the value selected in the currentWord variable
+    currentWord.append({'letter':valueSelected, 'posI': buttonIndexI, 'posJ':buttonIndexJ})
 
     # After we put the letter, we revert to the original state of buttons
     for i in range(len(letters)):
