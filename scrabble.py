@@ -12,70 +12,75 @@ class Player:
         # Set the name (usually an index)
         self.name = name
 
+        # List of letters
+        self.letters = []
+        for i in range(7):
+            self.letters.append(getRandomLetter())
+
 # Gameboard for Scrabble (15x15)
 board = [ [None] * 15 for i in range(15)]
 
-# List of available letters for the current turn
-letters = []
+# List of available letter buttons for the current turn
+letterButtons = []
 
 # Actual letter values
-letterValue = {'a' : 1,
-               'b' : 3,
-               'c' : 3,
-               'd' : 2,
-               'e' : 1,
-               'f' : 4,
-               'g' : 2,
-               'h' : 4,
-               'i' : 1,
-               'j' : 8,
-               'k' : 5,
-               'l' : 1,
-               'm' : 3,
-               'n' : 1,
-               'o' : 1,
-               'p' : 3,
-               'q' : 10,
-               'r' : 1,
-               's' : 1,
-               't' : 1,
-               'u' : 1,
-               'v' : 4,
-               'w' : 4,
-               'x' : 8,
-               'y' : 4,
-               'z' : 10}
+letterValue = {'A' : 1,
+               'B' : 3,
+               'C' : 3,
+               'D' : 2,
+               'E' : 1,
+               'F' : 4,
+               'G' : 2,
+               'H' : 4,
+               'I' : 1,
+               'J' : 8,
+               'K' : 5,
+               'L' : 1,
+               'M' : 3,
+               'N' : 1,
+               'O' : 1,
+               'P' : 3,
+               'Q' : 10,
+               'R' : 1,
+               'S' : 1,
+               'T' : 1,
+               'U' : 1,
+               'V' : 4,
+               'W' : 4,
+               'X' : 8,
+               'Y' : 4,
+               'Z' : 10}
 
 # For use in selecting a letter and placing it on the board
 valueSelected = ''
 
 # Initial bag
-bag = ['a'] * 9 + \
-      ['b'] * 2 + \
-      ['c'] * 2 + \
-      ['d'] * 4 + \
-      ['e'] * 12 + \
-      ['f'] * 2 + \
-      ['g'] * 3 + \
-      ['h'] * 2 + \
-      ['i'] * 9 + \
-      ['j'] * 1 + \
-      ['k'] * 1 + \
-      ['l'] * 4 + \
-      ['m'] * 2 + \
-      ['n'] * 6 + \
-      ['o'] * 8 + \
-      ['p'] * 2 + \
-      ['q'] * 1 + \
-      ['r'] * 6 + \
-      ['s'] * 4 + \
-      ['t'] * 6 + \
-      ['u'] * 4 + \
-      ['v'] * 2 + \
-      ['w'] * 2 + \
-      ['x'] * 1 + \
-      ['y'] * 2 + \
-      ['z'] * 1
+bag = ['A'] * 9 + \
+      ['B'] * 2 + \
+      ['C'] * 2 + \
+      ['D'] * 4 + \
+      ['E'] * 12 + \
+      ['F'] * 2 + \
+      ['G'] * 3 + \
+      ['H'] * 2 + \
+      ['I'] * 9 + \
+      ['J'] * 1 + \
+      ['K'] * 1 + \
+      ['L'] * 4 + \
+      ['M'] * 2 + \
+      ['N'] * 6 + \
+      ['O'] * 8 + \
+      ['P'] * 2 + \
+      ['Q'] * 1 + \
+      ['R'] * 6 + \
+      ['S'] * 4 + \
+      ['T'] * 6 + \
+      ['U'] * 4 + \
+      ['V'] * 2 + \
+      ['W'] * 2 + \
+      ['X'] * 1 + \
+      ['Y'] * 2 + \
+      ['Z'] * 1
 
 # Current word
 # It is a list of dicts: 'letter', 'posI', 'posJ'
@@ -97,7 +102,7 @@ def getWordValue(i1, j1, i2, j2):
     # Top-to-bottom words
     if i1 < i2:
         for i in range(i1, i2 + 1):
-            lv = letterValue[board[i][j1]['text'].lower()]
+            lv = letterValue[board[i][j1]['text'].upper()]
 
             # Double the letter's value?
             if board[i][j1]['bg'] == '#5e79ff':
@@ -118,7 +123,7 @@ def getWordValue(i1, j1, i2, j2):
             value += lv
     else:
         for j in range(j1, j2 + 1):
-            lv = letterValue[board[i1][j]['text'].lower()]
+            lv = letterValue[board[i1][j]['text'].upper()]
 
             # Double the letter's value?
             if board[i1][j]['bg'] == '#5e79ff':
@@ -138,7 +143,7 @@ def getWordValue(i1, j1, i2, j2):
         
             value += lv
             print(lv)
-            print(board[i1][j]['text'].lower())
+            print(board[i1][j]['text'].upper())
     
     if doubleWordValue:
         return 2 * value
@@ -240,16 +245,21 @@ def canUnlock(i, j):
 
 # Select a letter from the available ones
 def selectLetter(buttonIndex):
-    global valueSelected
+    global valueSelected, applyButton, randomButton, skipButton, letterSelectionStarted
     # Get the selected value
-    valueSelected = letters[buttonIndex]['text']
+    valueSelected = letterButtons[buttonIndex]['text']
 
     # Hide the button
-    letters[buttonIndex].grid_forget()
+    letterButtons[buttonIndex].grid_forget()
 
     # Make all other buttons unclickable and make the board clickable
-    for i in range(len(letters)):
-        letters[i]['state'] = 'disabled'
+    for i in range(len(letterButtons)):
+        letterButtons[i]['state'] = 'disabled'
+    
+    # Disable Apply/Random/Skip buttons
+    applyButton['state'] = 'disabled'
+    randomButton['state'] = 'disabled'
+    skipButton['state'] = 'disabled'
     
     for i in range(15):
         for j in range(15):
@@ -257,12 +267,11 @@ def selectLetter(buttonIndex):
             if board[i][j]['text'] == ' ' and canUnlock(i, j):
                 board[i][j]['state'] = 'normal'
 
-    # Should also make the 'apply word' and 'skip turn' buttons disabled
     print(f"Selected value {valueSelected} from button index {buttonIndex}")
 
 # Actually puts the letter on the board
 def putLetter(buttonIndexI, buttonIndexJ):
-    global valueSelected, currentWord
+    global valueSelected, currentWord, applyButton
 
     board[buttonIndexI][buttonIndexJ]['text'] = valueSelected
 
@@ -270,8 +279,11 @@ def putLetter(buttonIndexI, buttonIndexJ):
     currentWord.append({'letter':valueSelected, 'posI': buttonIndexI, 'posJ':buttonIndexJ})
 
     # After we put the letter, we revert to the original state of buttons
-    for i in range(len(letters)):
-        letters[i]['state'] = 'normal'
+    for i in range(len(letterButtons)):
+        letterButtons[i]['state'] = 'normal'
+    
+    # Apply word set to normal, Random/Skip buttons still disabled
+    applyButton['state'] = 'normal'
     
     for i in range(15):
         for j in range(15):
@@ -283,7 +295,14 @@ def putLetter(buttonIndexI, buttonIndexJ):
 # If the word is correct (alongside all the other words formed), it returns a score
 # If the word is not correct, it returns the letters from the game board to the player's board
 def checkWord():
-    global acceptedWords, info, currentWord
+    global acceptedWords, infoLabel, currentWord, randomButton, skipButton
+
+    # The first move must cover H8 square
+    h8covered = False
+
+    # Enable Random/Skip buttons
+    randomButton['state'] = 'normal'
+    skipButton['state'] = 'normal'
 
     # Get a list of all words from the gameboard
     wordsOnBoard = []
@@ -325,30 +344,43 @@ def checkWord():
                     wordsOnBoard.append((word, startI, startJ, endI, endJ))
                     word = ''
 
+    currentScore = 0
+
     # Check each word on the board with the words from the provided dictionary
     for wordEntry in wordsOnBoard:
         exists = False
         # Get only the word
         s1 = wordEntry[0]
         for s2 in acceptedWords:
-            if s1.lower() == s2.lower():
+            if s1.upper() == s2.upper():
                 exists = True
                 # print(f"Found word {s2} with score {getWordValue(wordEntry[1], wordEntry[2], wordEntry[3], wordEntry[4])}")
-                info['text'] = f"Found word {s2} with score {getWordValue(wordEntry[1], wordEntry[2], wordEntry[3], wordEntry[4])}"
+                _s = getWordValue(wordEntry[1], wordEntry[2], wordEntry[3], wordEntry[4])
+                infoLabel['text'] = f"Found word {s2} with score {_s}"
+                currentScore += _s
                 break
 
         if not exists:
             # print(f"Word '{s1}' does not exist in the dictionary!")
-            info['text'] = f"Word '{s1}' does not exist in the dictionary!"
+            infoLabel['text'] = f"Word '{s1}' does not exist in the dictionary!"
 
             # Return all the game pieces to the player's board
-            for e, widget in enumerate(letters):
+            for e, widget in enumerate(letterButtons):
                 if not widget.winfo_ismapped():
                     widget.grid(row=0, column=e, padx=10)
             # Remove the pieces from the game board
             for e in range(len(currentWord)):
                 board[currentWord[e]['posI']][currentWord[e]['posJ']]['text'] = ' '
+            
+            # Clear the current word variable
+            currentWord = []
             return
+    
+    # Clear the current word variable
+    currentWord = []
+
+    # If the word was correct, end the turn
+    endTurn(currentScore)
 
 # Displays the board and other info associated with the selected player
 def displayPlayer(playerIndex):
@@ -357,13 +389,13 @@ def displayPlayer(playerIndex):
 
     # Display player's board
 
-# Returns a selection of 7 letters from the bag following the Scrabble distribution
-# Returns: None if there are less than 7 letters, the board otherwise
+# Updates the board of the current player if at least 7 letters remain in the bag
+# Else it does nothing
 def getRandomBoard():
-    global bag
+    global bag, players, currentPlayerIndex
     
     if len(bag) < 7:
-        return None
+        return
     # Shuffle the bag first
     random.shuffle(bag)
 
@@ -371,7 +403,16 @@ def getRandomBoard():
     letters = []
     for i in range(7):
         letters.append(bag.pop())
-    return letters
+    
+    # Add the current player's letters to the bag
+    bag += players[currentPlayerIndex].letters
+
+    # Update the player's letters
+    players[currentPlayerIndex].letters = letters
+
+    # Fact: the letters won't show right away, because if you choose to randomize them, it ends your turn so they won't be displayed.
+
+    endTurn()
 
 # Returns a random letter from the bag
 def getRandomLetter():
@@ -382,6 +423,45 @@ def getRandomLetter():
 
     random.shuffle(bag)
     return bag.pop()
+
+# Ends the current turn and updates the GUI for the next player (playerLabel, letterButtons and infoLabel)
+def endTurn(score = 0):
+    global currentPlayerIndex, letterButtons
+
+    print(f"Player {currentPlayerIndex} ended his turn!")
+    
+    # Save the current board for the current player
+    # First, make sure there are 7 letters on the board
+    while len(players[currentPlayerIndex].letters) < 7:
+        if len(bag) != 0:
+            players[currentPlayerIndex].letters.append(getRandomLetter())
+            print(f"Added letter {players[currentPlayerIndex].letters[-1]} to the list!")
+        else:
+            print(f"No more letters in bag for player {currentPlayerIndex}!")
+            break
+
+    # Save the score
+    players[currentPlayerIndex].score += score
+    print(f"Player {currentPlayerIndex} got score {score} for this round!")
+
+    # Display the next player
+    currentPlayerIndex = (currentPlayerIndex + 1) % len(players)
+
+    # Display the label
+    playerLabel['text'] = f"Player {currentPlayerIndex} board"
+
+    # Display the letters
+    for i in range(7):
+        # Update the letters
+        letterButtons[i]['text'] = players[currentPlayerIndex].letters[i]
+
+        # Make all of them visible
+        if not letterButtons[i].winfo_ismapped():
+            letterButtons[i].grid(row=0, column=i, padx=10)
+
+    # Info label
+    infoLabel['text'] = f'Info label for player {currentPlayerIndex}'
+
 
 if __name__ == "__main__":
 
@@ -401,6 +481,10 @@ if __name__ == "__main__":
     
     print("Dictionary:")
     print(acceptedWords)
+
+    # Create the players
+    players = [Player(0), Player(1)]
+    currentPlayerIndex = 0
 
     # Draw the main window
     root = Tk()
@@ -427,8 +511,8 @@ if __name__ == "__main__":
 
     # Frame displaying the current player
     framePlayer = Frame(root, pady=20)
-    player = Label(framePlayer, text="Player 1 board", font=('Arial', 25))
-    player.pack()
+    playerLabel = Label(framePlayer, text="Player 0 board", font=('Arial', 25))
+    playerLabel.pack()
 
     # Frame containing the letters
     frameLetters = Frame(root)
@@ -437,19 +521,31 @@ if __name__ == "__main__":
         # Create the callback function
         action = partial(selectLetter, i)
 
-        letters.append(Button(frameLetters, text=chr(65 + i), height=2, width=5, font=('Arial', 10), command=action))
-        letters[i].grid(row=0, column=i, padx=10)
+        letterButtons.append(Button(frameLetters, text=chr(65 + i), height=2, width=5, font=('Arial', 10), command=action))
+        letterButtons[i].grid(row=0, column=i, padx=10)
 
     # Information box for different messages
     frameInfo = Frame(root, pady=20)
-    info = Label(frameInfo, text='Info box', font = ('Arial', 15))
-    info.pack()
+    infoLabel = Label(frameInfo, text='Info box', font = ('Arial', 15))
+    infoLabel.pack()
     
+    # Buttons frame
+    frameButtons = Frame(root)
+
     # Apply word button which checks if the word is good
-    applyButton = Button(root, text='Apply word', command=checkWord)
-    applyButton.pack()
+    applyButton = Button(frameButtons, text='Apply word', command=checkWord)
+    applyButton.grid(row=0, column=0, padx=10)
+
+    # Random button - selects 7 others letters from the bag and puts the 7 current ones bag
+    randomButton = Button(frameButtons, text='Random', command=getRandomBoard)
+    randomButton.grid(row=0, column=1, padx=10)
+
+    # Skip turn button - skips the current turn, scoring nothing
+    skipButton = Button(frameButtons, text='Skip')
+    skipButton.grid(row=0, column=2, padx=10)
     
     # Pack everything else
+    frameButtons.pack()
     frameBoard.pack()
     framePlayer.pack()
     frameLetters.pack()
