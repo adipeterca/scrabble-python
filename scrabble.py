@@ -1,5 +1,7 @@
 from tkinter import *
 from functools import partial
+import sys
+import re
 
 # Gameboard for Scrabble (15x15)
 board = [ [None] * 15 for i in range(15)]
@@ -7,8 +9,33 @@ board = [ [None] * 15 for i in range(15)]
 # List of available letters for the current turn
 letters = []
 
-# TODO
-letterValue = { }
+# Actual letter values
+letterValue = {'a' : 1,
+               'b' : 3,
+               'c' : 3,
+               'd' : 2,
+               'e' : 1,
+               'f' : 4,
+               'g' : 2,
+               'h' : 4,
+               'i' : 1,
+               'j' : 8,
+               'k' : 5,
+               'l' : 1,
+               'm' : 3,
+               'n' : 1,
+               'o' : 1,
+               'p' : 3,
+               'q' : 10,
+               'r' : 1,
+               's' : 1,
+               't' : 1,
+               'u' : 1,
+               'v' : 4,
+               'w' : 4,
+               'x' : 8,
+               'y' : 4,
+               'z' : 10}
 
 # For use in selecting a letter and placing it on the board
 valueSelected = ''
@@ -16,6 +43,71 @@ valueSelected = ''
 # Current word
 # It is a list of dicts: 'letter', 'posI', 'posJ'
 currentWord = []
+
+# Words list
+acceptedWords = []
+
+# Returns the word value
+def getWordValue(i1, j1, i2, j2):
+
+    global letterValue
+
+    doubleWordValue = False
+    tripleWordValue = False
+    
+    value = 0
+
+    # Top-to-bottom words
+    if i1 < i2:
+        for i in range(i1, i2 + 1):
+            lv = letterValue[board[i][j1]['text'].lower()]
+
+            # Double the letter's value?
+            if board[i][j1]['bg'] == '#5e79ff':
+                lv = 2 * lv
+            
+            # Triple the letter's value?
+            if board[i][j1]['bg'] == '#1130cf':
+                lv = 3 * lv
+
+            # Double the word's value?
+            if board[i][j1]['bg'] == '#ff4fc4':
+                doubleWordValue = True
+            
+            # Triple the word's value?
+            if board[i][j1]['bg'] == '#f00c4d':
+                tripleWordValue = True
+        
+            value += lv
+    else:
+        for j in range(j1, j2 + 1):
+            lv = letterValue[board[i1][j]['text'].lower()]
+
+            # Double the letter's value?
+            if board[i1][j]['bg'] == '#5e79ff':
+                lv = 2 * lv
+            
+            # Triple the letter's value?
+            if board[i1][j]['bg'] == '#1130cf':
+                lv = 3 * lv
+
+            # Double the word's value?
+            if board[i1][j]['bg'] == '#ff4fc4':
+                doubleWordValue = True
+            
+            # Triple the word's value?
+            if board[i1][j]['bg'] == '#f00c4d':
+                tripleWordValue = True
+        
+            value += lv
+            print(lv)
+            print(board[i1][j]['text'].lower())
+    
+    if doubleWordValue:
+        return 2 * value
+    if tripleWordValue:
+        return 3 * value
+    return value
 
 # Color corrections
 #   Light red : double word value #ff4fc4
@@ -108,6 +200,7 @@ def canUnlock(i, j):
         return currentWord[size - 1]['posJ'] == j and currentWord[size - 1]['posI'] + 1 == i
     # Right-left
     return currentWord[size - 1]['posI'] == i and currentWord[size - 1]['posJ'] + 1 == j
+
 # Select a letter from the available ones
 def selectLetter(buttonIndex):
     global valueSelected
@@ -149,7 +242,96 @@ def putLetter(buttonIndexI, buttonIndexJ):
         
     print(f"Applied value {valueSelected} to button[{buttonIndexI}][{buttonIndexJ}]")
 
+# Called when 'Apply word' is clicked
+# If the word is correct (alongside all the other words formed), it returns a score
+# If the word is not correct, it returns the letters from the game board to the player's board
+def checkWord():
+    global acceptedWords, info, currentWord
+
+    # Get a list of all words from the gameboard
+    wordsOnBoard = []
+
+    startI = startJ = endI = endJ = 0
+
+    # Get words written left-to-right
+    for i in range(15):
+        # Check each line for words
+        word = ''
+        for j in range(15):
+            if board[i][j]['text'] != ' ':
+                # If it is a blank word (not formed yet)
+                if word == '':
+                    startI = i
+                    startJ = j
+                word += board[i][j]['text']
+                endI = i
+                endJ = j
+            else:
+                if word != '' and len(word) >= 2:
+                    wordsOnBoard.append((word, startI, startJ, endI, endJ))
+                    word = ''
+
+    # Get words written top-to-bottom
+    for j in range(15):
+        word = ''
+        for i in range(15):
+            if board[i][j]['text'] != ' ':
+                # If it is a blank word (not formed yet)
+                if word == '':
+                    startI = i
+                    startJ = j
+                word += board[i][j]['text']
+                endI = i
+                endJ = j
+            else:
+                if word != '' and len(word) >= 2:
+                    wordsOnBoard.append((word, startI, startJ, endI, endJ))
+                    word = ''
+
+    # Check each word on the board with the words from the provided dictionary
+    for wordEntry in wordsOnBoard:
+        exists = False
+        # Get only the word
+        s1 = wordEntry[0]
+        for s2 in acceptedWords:
+            if s1.lower() == s2.lower():
+                exists = True
+                # print(f"Found word {s2} with score {getWordValue(wordEntry[1], wordEntry[2], wordEntry[3], wordEntry[4])}")
+                info['text'] = f"Found word {s2} with score {getWordValue(wordEntry[1], wordEntry[2], wordEntry[3], wordEntry[4])}"
+                break
+
+        if not exists:
+            # print(f"Word '{s1}' does not exist in the dictionary!")
+            info['text'] = f"Word '{s1}' does not exist in the dictionary!"
+
+            # Return all the game pieces to the player's board
+            for e, widget in enumerate(letters):
+                if not widget.winfo_ismapped():
+                    widget.grid(row=0, column=e, padx=10)
+            # Remove the pieces from the game board
+            for e in range(len(currentWord)):
+                board[currentWord[e]['posI']][currentWord[e]['posJ']]['text'] = ' '
+            return
+
+
 if __name__ == "__main__":
+
+    # Check command line
+    if len(sys.argv) != 2:
+        print(f"USAGE: python3 scrabble.py dict.txt")
+        exit(0)
+
+    # Parse the dictionary specified as parameter
+    with open(sys.argv[1], "r") as fin:
+        acceptedWords = [s[:-1] if s[-1:] == '\n' else s for s in fin.readlines()]
+        reg = re.compile(r'^[a-z]+$')
+        for s in acceptedWords:
+            if not reg.match(s):
+                print(f"Word '{s}' from dict is not a word!")
+                exit(0)
+    
+    print("Dictionary:")
+    print(acceptedWords)
 
     # Draw the main window
     root = Tk()
@@ -195,7 +377,8 @@ if __name__ == "__main__":
     info.pack()
     
     # Apply word button which checks if the word is good
-    Button(root, text='Apply word').pack()
+    applyButton = Button(root, text='Apply word', command=checkWord)
+    applyButton.pack()
     
     # Pack everything else
     frameBoard.pack()
@@ -204,4 +387,3 @@ if __name__ == "__main__":
     frameInfo.pack()
 
     root.mainloop()
-
