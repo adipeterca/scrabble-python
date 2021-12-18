@@ -3,6 +3,7 @@ from functools import partial
 import sys
 import re
 import random
+import os
 
 class Player:
     def __init__(self, name = 0):
@@ -490,7 +491,6 @@ def endTurn(score = 0):
     # Info label
     infoLabel['text'] = f'Info label for player {currentPlayerIndex}'
 
-
 if __name__ == "__main__":
 
     # Check command line
@@ -580,4 +580,12 @@ if __name__ == "__main__":
     frameLetters.pack()
     frameInfo.pack()
 
+    # Print scores on exit
+    def endGame():
+        os.system("cls")
+        for i in range(len(players)):
+            print(f"Player {i} scored {players[i].score}!")
+        root.destroy()
+
+    root.protocol("WM_DELETE_WINDOW", endGame)
     root.mainloop()
