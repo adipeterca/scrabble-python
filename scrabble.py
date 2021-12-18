@@ -297,12 +297,40 @@ def putLetter(buttonIndexI, buttonIndexJ):
 def checkWord():
     global acceptedWords, infoLabel, currentWord, randomButton, skipButton
 
-    # The first move must cover H8 square
-    h8covered = False
-
     # Enable Random/Skip buttons
     randomButton['state'] = 'normal'
     skipButton['state'] = 'normal'
+
+    if len(currentWord) < 2:
+        infoLabel['text'] = 'To apply a word it needs to have at least 2 letters!'
+
+        # Return all the game pieces to the player's board
+        for e, widget in enumerate(letterButtons):
+            if not widget.winfo_ismapped():
+                widget.grid(row=0, column=e, padx=10)
+        # Remove the pieces from the game board
+        for e in range(len(currentWord)):
+            board[currentWord[e]['posI']][currentWord[e]['posJ']]['text'] = ' '
+        
+        # Clear the current word variable
+        currentWord = []
+        return
+
+    # H8 must be covered! (even from the first round)
+    if board[7][7]['text'] == ' ':
+        infoLabel['text'] = 'You must cover H8!'
+
+        # Return all the game pieces to the player's board
+        for e, widget in enumerate(letterButtons):
+            if not widget.winfo_ismapped():
+                widget.grid(row=0, column=e, padx=10)
+        # Remove the pieces from the game board
+        for e in range(len(currentWord)):
+            board[currentWord[e]['posI']][currentWord[e]['posJ']]['text'] = ' '
+        
+        # Clear the current word variable
+        currentWord = []
+        return
 
     # Get a list of all words from the gameboard
     wordsOnBoard = []
@@ -521,7 +549,8 @@ if __name__ == "__main__":
         # Create the callback function
         action = partial(selectLetter, i)
 
-        letterButtons.append(Button(frameLetters, text=chr(65 + i), height=2, width=5, font=('Arial', 10), command=action))
+        letterButtons.append(Button(frameLetters, height=2, width=5, font=('Arial', 10), command=action))
+        letterButtons[i]['text'] = players[currentPlayerIndex].letters[i]
         letterButtons[i].grid(row=0, column=i, padx=10)
 
     # Information box for different messages
@@ -541,7 +570,7 @@ if __name__ == "__main__":
     randomButton.grid(row=0, column=1, padx=10)
 
     # Skip turn button - skips the current turn, scoring nothing
-    skipButton = Button(frameButtons, text='Skip')
+    skipButton = Button(frameButtons, text='Skip', command=endTurn)
     skipButton.grid(row=0, column=2, padx=10)
     
     # Pack everything else
