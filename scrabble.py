@@ -2,6 +2,15 @@ from tkinter import *
 from functools import partial
 import sys
 import re
+import random
+
+class Player:
+    def __init__(self, name = 0):
+        # Set the initial score
+        self.score = 0
+
+        # Set the name (usually an index)
+        self.name = name
 
 # Gameboard for Scrabble (15x15)
 board = [ [None] * 15 for i in range(15)]
@@ -39,6 +48,34 @@ letterValue = {'a' : 1,
 
 # For use in selecting a letter and placing it on the board
 valueSelected = ''
+
+# Initial bag
+bag = ['a'] * 9 + \
+      ['b'] * 2 + \
+      ['c'] * 2 + \
+      ['d'] * 4 + \
+      ['e'] * 12 + \
+      ['f'] * 2 + \
+      ['g'] * 3 + \
+      ['h'] * 2 + \
+      ['i'] * 9 + \
+      ['j'] * 1 + \
+      ['k'] * 1 + \
+      ['l'] * 4 + \
+      ['m'] * 2 + \
+      ['n'] * 6 + \
+      ['o'] * 8 + \
+      ['p'] * 2 + \
+      ['q'] * 1 + \
+      ['r'] * 6 + \
+      ['s'] * 4 + \
+      ['t'] * 6 + \
+      ['u'] * 4 + \
+      ['v'] * 2 + \
+      ['w'] * 2 + \
+      ['x'] * 1 + \
+      ['y'] * 2 + \
+      ['z'] * 1
 
 # Current word
 # It is a list of dicts: 'letter', 'posI', 'posJ'
@@ -313,6 +350,38 @@ def checkWord():
                 board[currentWord[e]['posI']][currentWord[e]['posJ']]['text'] = ' '
             return
 
+# Displays the board and other info associated with the selected player
+def displayPlayer(playerIndex):
+    pass
+    # Display player's name
+
+    # Display player's board
+
+# Returns a selection of 7 letters from the bag following the Scrabble distribution
+# Returns: None if there are less than 7 letters, the board otherwise
+def getRandomBoard():
+    global bag
+    
+    if len(bag) < 7:
+        return None
+    # Shuffle the bag first
+    random.shuffle(bag)
+
+    # Pop 7 elements from it
+    letters = []
+    for i in range(7):
+        letters.append(bag.pop())
+    return letters
+
+# Returns a random letter from the bag
+def getRandomLetter():
+    global bag
+
+    if len(bag) == 0:
+        return None
+
+    random.shuffle(bag)
+    return bag.pop()
 
 if __name__ == "__main__":
 
