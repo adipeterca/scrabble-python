@@ -701,3 +701,8 @@ if __name__ == "__main__":
 
     root.protocol("WM_DELETE_WINDOW", endGame)
     root.mainloop()
+
+# Left TODO
+# 1. sa poti adauga cuvinte doar daca sunt adiacente cu cele deja existente (aproape facut, trebuie testat bine)
+# 2. sa poti pune o litera pentru un cuvant DUPA una deja existenta (de ex, daca scrii [- - - A B c - -] si urmeaza sa pui D, sa o poti face (c deja exista))
+# 3. testare foarte detaliata, in rest totul e facut
