@@ -21,6 +21,9 @@ class Player:
 # Gameboard for Scrabble (15x15)
 board = [ [None] * 15 for i in range(15)]
 
+# The number of turns played
+turns = 0
+
 # List of available letter buttons for the current turn
 letterButtons = []
 
@@ -89,6 +92,9 @@ currentWord = []
 
 # Words list
 acceptedWords = []
+
+# Used in calculating the current score of the words formed
+previousScore = 0
 
 # Returns the word value
 def getWordValue(i1, j1, i2, j2):
@@ -296,14 +302,15 @@ def putLetter(buttonIndexI, buttonIndexJ):
 # If the word is correct (alongside all the other words formed), it returns a score
 # If the word is not correct, it returns the letters from the game board to the player's board
 def checkWord():
-    global acceptedWords, infoLabel, currentWord, randomButton, skipButton
+    global acceptedWords, infoLabel, currentWord, randomButton, skipButton, previousScore, turns
 
     # Enable Random/Skip buttons
     randomButton['state'] = 'normal'
     skipButton['state'] = 'normal'
 
-    if len(currentWord) < 2:
-        infoLabel['text'] = 'To apply a word it needs to have at least 2 letters!'
+    # The first word must be at least 2 letters in length
+    if turns == 0 and len(currentWord) < 2:
+        infoLabel['text'] = 'First word must be at least 2 letters in length!'
 
         # Return all the game pieces to the player's board
         for e, widget in enumerate(letterButtons):
@@ -317,7 +324,7 @@ def checkWord():
         currentWord = []
         return
 
-    # H8 must be covered! (even from the first round)
+    # H8 must be covered! (from the first round)
     if board[7][7]['text'] == ' ':
         infoLabel['text'] = 'You must cover H8!'
 
@@ -333,6 +340,107 @@ def checkWord():
         currentWord = []
         return
 
+    # If it is not the first word, it can be at least 1 letter in length
+    if len(currentWord) < 1:
+        infoLabel['text'] = 'To apply a word it needs to have at least 2 letters!'
+
+        # Return all the game pieces to the player's board
+        for e, widget in enumerate(letterButtons):
+            if not widget.winfo_ismapped():
+                widget.grid(row=0, column=e, padx=10)
+        # Remove the pieces from the game board
+        for e in range(len(currentWord)):
+            board[currentWord[e]['posI']][currentWord[e]['posJ']]['text'] = ' '
+        
+        # Clear the current word variable
+        currentWord = []
+        return
+
+    # All words except the first one MUST be adjucent
+    if turns > 0:
+        hasWordNextToIt = False
+
+        # Special case: 1 letter words
+        if len(currentWord) == 1:
+            i = currentWord[0]['posI']
+            j = currentWord[0]['posJ']
+            if i - 1 >= 0 and board[i - 1][j]['text'] != ' ' or \
+                i + 1 <= 14 and board[i + 1][j]['text'] != ' ' or \
+                j - 1 >= 0 and board[i][j - 1]['text'] != ' ' or \
+                j + 1 <= 14 and board[i][j + 1]['text'] != ' ':
+                hasWordNextToIt = True
+        else:
+            # Get word direction
+            if currentWord[0]['posI'] == currentWord[1]['posI']: # Right to left word
+
+                # Has letter at the beginning or at the end?
+                #
+                # For example, let's consider word X X X X
+                # Does it have A X X X X B ? 
+
+                lastIdx = len(currentWord) - 1
+                if currentWord[0]['posJ'] - 1 >= 0 and board[currentWord[0]['posI']][currentWord[0]['posJ'] - 1] != ' ' or \
+                    currentWord[lastIdx]['posJ'] + 1 <= 14 and board[currentWord[lastIdx]['posI']][currentWord[lastIdx]['posJ'] + 1] != ' ':
+                    hasWordNextToIt = True
+                
+                # Does the word have something like this (letters above/below):
+                # A - B - -
+                # X X X X X
+                # - C - D -
+                else:
+                    ii = currentWord[0]['posI']
+                    for k in range(currentWord[0]['posJ'], len(currentWord) + currentWord[0]['posJ']):
+                        if ii - 1 >= 0 and board[ii - 1][k] != ' ' or \
+                            ii + 1 <= 14 and board[ii + 1][k] != ' ':
+                            hasWordNextToIt = True
+                            break
+            else: # Top to bottom
+                
+                # Has letter at the beginning or at the end?
+                #
+                # For example, let's consider word X X X X
+                # - A -
+                # - X -
+                # - X -
+                # - X -
+                # - X -
+                # - B -
+                # Does it have something like this?
+                
+                lastIdx = len(currentWord) - 1
+                if currentWord[0]['posI'] - 1 >= 0 and board[currentWord[0]['posI'] - 1][currentWord[0]['posJ']] != ' ' or \
+                    currentWord[lastIdx]['posI'] + 1 <= 14 and board[currentWord[lastIdx]['posI'] + 1][currentWord[lastIdx]['posJ']] != ' ':
+                    hasWordNextToIt = True
+                else:
+                    # Or does it have something like this?
+                    # - X -
+                    # - X B
+                    # D X C
+                    # - X A
+                    jj = currentWord[0]['posJ']
+                    for k in range(currentWord[0]['posI'], len(currentWord) + currentWord[0]['posI']):
+                        if jj - 1 >= 0 and board[k][jj - 1] != ' ' or \
+                            jj + 1 <= 14 and board[k][jj + 1] != ' ':
+                            hasWordNextToIt = True
+                            break
+
+
+        # Cannot be a single word (not surrounded by at least one other word)
+        if not hasWordNextToIt:
+            infoLabel['text'] = 'Words must be adjucent to each other'
+
+            # Return all the game pieces to the player's board
+            for e, widget in enumerate(letterButtons):
+                if not widget.winfo_ismapped():
+                    widget.grid(row=0, column=e, padx=10)
+            # Remove the pieces from the game board
+            for e in range(len(currentWord)):
+                board[currentWord[e]['posI']][currentWord[e]['posJ']]['text'] = ' '
+            
+            # Clear the current word variable
+            currentWord = []
+            return
+    
     # Get a list of all words from the gameboard
     wordsOnBoard = []
 
@@ -409,7 +517,8 @@ def checkWord():
     currentWord = []
 
     # If the word was correct, end the turn
-    endTurn(currentScore)
+    endTurn(currentScore - previousScore)
+    previousScore = currentScore
 
 # Displays the board and other info associated with the selected player
 def displayPlayer(playerIndex):
@@ -455,9 +564,12 @@ def getRandomLetter():
 
 # Ends the current turn and updates the GUI for the next player (playerLabel, letterButtons and infoLabel)
 def endTurn(score = 0):
-    global currentPlayerIndex, letterButtons
+    global currentPlayerIndex, letterButtons, turns
 
     print(f"Player {currentPlayerIndex} ended his turn!")
+    print(f"Ended turn {turns}!")
+    turns += 1
+    print(f"Started turn {turns}!")
     
     # Save the current board for the current player
     # First, make sure there are 7 letters on the board
