@@ -252,12 +252,16 @@ def canUnlock(i, j):
 
 # Select a letter from the available ones
 def selectLetter(buttonIndex):
-    global valueSelected, applyButton, randomButton, skipButton, letterSelectionStarted
+    global valueSelected, applyButton, randomButton, skipButton, players, currentPlayerIndex
     # Get the selected value
     valueSelected = letterButtons[buttonIndex]['text']
+    # valueSelected = players[currentPlayerIndex].letters[buttonIndex]
 
     # Hide the button
     letterButtons[buttonIndex].grid_forget()
+    
+    # Delete the letter
+    players[currentPlayerIndex].letters.pop(buttonIndex)
 
     # Make all other buttons unclickable and make the board clickable
     for i in range(len(letterButtons)):
@@ -541,6 +545,7 @@ def endTurn(score = 0):
     
     # Save the current board for the current player
     # First, make sure there are 7 letters on the board
+    print(players[currentPlayerIndex].letters)
     while len(players[currentPlayerIndex].letters) < 7:
         if len(bag) != 0:
             players[currentPlayerIndex].letters.append(getRandomLetter())
