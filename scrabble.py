@@ -231,6 +231,7 @@ def colorCorrections(board):
     board[14][11]['bg'] = '#5e79ff'
 
 # Unlocks only the buttons on the board that represent a right placement for the next letter (top-down or right-left)
+# Meaning it can only unlock the next available position (it skips over already placed letters)
 def canUnlock(i, j):
     global currentWord
 
@@ -240,15 +241,26 @@ def canUnlock(i, j):
     if size == 0:
         return True
 
-    # If only a letter was placed, it can be either top-bottom or right-left
-    if size == 1:
-        return currentWord[0]['posI'] == i and currentWord[0]['posJ'] + 1 == j or currentWord[0]['posI'] + 1 == i and currentWord[0]['posJ'] == j
+    ii = currentWord[size - 1]['posI']
+    jj = currentWord[size - 1]['posJ']
 
-    # Top-down
-    if currentWord[size - 1]['posJ'] == currentWord[size - 2]['posJ']:
-        return currentWord[size - 1]['posJ'] == j and currentWord[size - 1]['posI'] + 1 == i
-    # Right-left
-    return currentWord[size - 1]['posI'] == i and currentWord[size - 1]['posJ'] + 1 == j
+    # Left to right
+    if ii == i:
+        # Return True only if there are no empty spaces from the last placed letter of the word to the current position
+        for _ in range(jj, j):
+            if board[ii][_] == ' ':
+                return False
+        
+        return True
+    
+    # Top to bottom
+    if jj == j:
+        for _ in range(ii, i):
+            if board[_][jj] == ' ':
+                return False
+        return True
+    
+    return False
 
 # Select a letter from the available ones
 def selectLetter(buttonIndex):
