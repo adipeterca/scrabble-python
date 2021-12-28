@@ -1,9 +1,9 @@
-from tkinter import *
-from functools import partial
 import sys
 import re
 import random
 import os
+from tkinter import *
+from functools import partial
 
 class Player:
     def __init__(self, name = 0):
