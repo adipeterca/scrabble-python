@@ -149,8 +149,8 @@ def getWordValue(i1, j1, i2, j2):
                 tripleWordValue = True
         
             value += lv
-            print(lv)
-            print(board[i1][j]['text'].upper())
+            # print(lv)
+            # print(board[i1][j]['text'].upper())
     
     if doubleWordValue:
         return 2 * value
@@ -274,7 +274,7 @@ def selectLetter(buttonIndex):
             if board[i][j]['text'] == ' ' and canUnlock(i, j):
                 board[i][j]['state'] = 'normal'
 
-    print(f"Selected value {valueSelected} from button index {buttonIndex}")
+    # print(f"Selected value {valueSelected} from button index {buttonIndex}")
 
 # Actually puts the letter on the board
 def putLetter(buttonIndexI, buttonIndexJ):
@@ -296,7 +296,7 @@ def putLetter(buttonIndexI, buttonIndexJ):
         for j in range(15):
             board[i][j]['state'] = 'disabled'
         
-    print(f"Applied value {valueSelected} to button[{buttonIndexI}][{buttonIndexJ}]")
+    # print(f"Applied value {valueSelected} to button[{buttonIndexI}][{buttonIndexJ}]")
 
 # Called when 'Apply word' is clicked
 # If the word is correct (alongside all the other words formed), it returns a score
@@ -326,7 +326,7 @@ def checkWord():
 
     # H8 must be covered! (from the first round)
     if board[7][7]['text'] == ' ':
-        infoLabel['text'] = 'You must cover H8!'
+        infoLabel['text'] = 'You must cover the central square!'
 
         # Return all the game pieces to the player's board
         for e, widget in enumerate(letterButtons):
@@ -360,70 +360,36 @@ def checkWord():
     if turns > 0:
         hasWordNextToIt = False
 
-        # Special case: 1 letter words
-        if len(currentWord) == 1:
-            i = currentWord[0]['posI']
-            j = currentWord[0]['posJ']
-            if i - 1 >= 0 and board[i - 1][j]['text'] != ' ' or \
-                i + 1 <= 14 and board[i + 1][j]['text'] != ' ' or \
-                j - 1 >= 0 and board[i][j - 1]['text'] != ' ' or \
-                j + 1 <= 14 and board[i][j + 1]['text'] != ' ':
+        # A list representing the letters of the current word by a simple (i, j) tuple
+        currentLetterPositions = []
+
+        # Get current letters
+        for i in range(len(currentWord)):
+            posI = currentWord[i]['posI']
+            posJ = currentWord[i]['posJ']
+            currentLetterPositions.append((posI, posJ))
+ 
+        # For each letter of the word, test if it has another adjucent letter that IS NOT in the current letters list
+        for k in range(len(currentWord)):
+            
+            i = currentWord[k]['posI']
+            j = currentWord[k]['posJ']
+
+            # Test up
+            if i > 0 and (i - 1, j) not in currentLetterPositions and board[i - 1][j]['text'] != ' ':
                 hasWordNextToIt = True
-        else:
-            # Get word direction
-            if currentWord[0]['posI'] == currentWord[1]['posI']: # Right to left word
-
-                # Has letter at the beginning or at the end?
-                #
-                # For example, let's consider word X X X X
-                # Does it have A X X X X B ? 
-
-                lastIdx = len(currentWord) - 1
-                if currentWord[0]['posJ'] - 1 >= 0 and board[currentWord[0]['posI']][currentWord[0]['posJ'] - 1] != ' ' or \
-                    currentWord[lastIdx]['posJ'] + 1 <= 14 and board[currentWord[lastIdx]['posI']][currentWord[lastIdx]['posJ'] + 1] != ' ':
-                    hasWordNextToIt = True
-                
-                # Does the word have something like this (letters above/below):
-                # A - B - -
-                # X X X X X
-                # - C - D -
-                else:
-                    ii = currentWord[0]['posI']
-                    for k in range(currentWord[0]['posJ'], len(currentWord) + currentWord[0]['posJ']):
-                        if ii - 1 >= 0 and board[ii - 1][k] != ' ' or \
-                            ii + 1 <= 14 and board[ii + 1][k] != ' ':
-                            hasWordNextToIt = True
-                            break
-            else: # Top to bottom
-                
-                # Has letter at the beginning or at the end?
-                #
-                # For example, let's consider word X X X X
-                # - A -
-                # - X -
-                # - X -
-                # - X -
-                # - X -
-                # - B -
-                # Does it have something like this?
-                
-                lastIdx = len(currentWord) - 1
-                if currentWord[0]['posI'] - 1 >= 0 and board[currentWord[0]['posI'] - 1][currentWord[0]['posJ']] != ' ' or \
-                    currentWord[lastIdx]['posI'] + 1 <= 14 and board[currentWord[lastIdx]['posI'] + 1][currentWord[lastIdx]['posJ']] != ' ':
-                    hasWordNextToIt = True
-                else:
-                    # Or does it have something like this?
-                    # - X -
-                    # - X B
-                    # D X C
-                    # - X A
-                    jj = currentWord[0]['posJ']
-                    for k in range(currentWord[0]['posI'], len(currentWord) + currentWord[0]['posI']):
-                        if jj - 1 >= 0 and board[k][jj - 1] != ' ' or \
-                            jj + 1 <= 14 and board[k][jj + 1] != ' ':
-                            hasWordNextToIt = True
-                            break
-
+            
+            # Test down
+            if i < 14 and (i + 1, j) not in currentLetterPositions and board[i + 1][j]['text'] != ' ':
+                hasWordNextToIt = True
+            
+            # Test left
+            if j > 0 and (i, j - 1) not in currentLetterPositions and board[i][j - 1]['text'] != ' ':
+                hasWordNextToIt = True
+            
+            # Test right
+            if j < 14 and (i, j + 1) not in currentLetterPositions and board[i][j + 1]['text'] != ' ':
+                hasWordNextToIt = True
 
         # Cannot be a single word (not surrounded by at least one other word)
         if not hasWordNextToIt:
@@ -460,9 +426,9 @@ def checkWord():
                 endI = i
                 endJ = j
             else:
-                if word != '' and len(word) >= 2:
+                if len(word) >= 2:
                     wordsOnBoard.append((word, startI, startJ, endI, endJ))
-                    word = ''
+                word = ''
 
     # Get words written top-to-bottom
     for j in range(15):
@@ -477,11 +443,13 @@ def checkWord():
                 endI = i
                 endJ = j
             else:
-                if word != '' and len(word) >= 2:
+                if len(word) >= 2:
                     wordsOnBoard.append((word, startI, startJ, endI, endJ))
-                    word = ''
+                word = ''
 
     currentScore = 0
+
+    print(f"[DEBUG] Words on board: {wordsOnBoard}")
 
     # Check each word on the board with the words from the provided dictionary
     for wordEntry in wordsOnBoard:
@@ -566,24 +534,24 @@ def getRandomLetter():
 def endTurn(score = 0):
     global currentPlayerIndex, letterButtons, turns
 
-    print(f"Player {currentPlayerIndex} ended his turn!")
-    print(f"Ended turn {turns}!")
+    print(f"[DEBUG] Player {currentPlayerIndex} ended his turn!")
+    print(f"[DEBUG] Ended turn {turns}!")
     turns += 1
-    print(f"Started turn {turns}!")
+    print(f"[DEBUG] Started turn {turns}!")
     
     # Save the current board for the current player
     # First, make sure there are 7 letters on the board
     while len(players[currentPlayerIndex].letters) < 7:
         if len(bag) != 0:
             players[currentPlayerIndex].letters.append(getRandomLetter())
-            print(f"Added letter {players[currentPlayerIndex].letters[-1]} to the list!")
+            print(f"[DEBUG] Added letter {players[currentPlayerIndex].letters[-1]} to the list!")
         else:
-            print(f"No more letters in bag for player {currentPlayerIndex}!")
+            print(f"[DEBUG] No more letters in bag for player {currentPlayerIndex}!")
             break
 
     # Save the score
     players[currentPlayerIndex].score += score
-    print(f"Player {currentPlayerIndex} got score {score} for this round!")
+    print(f"[DEBUG] Player {currentPlayerIndex} got score {score} for this round!")
 
     # Display the next player
     currentPlayerIndex = (currentPlayerIndex + 1) % len(players)
@@ -601,13 +569,14 @@ def endTurn(score = 0):
             letterButtons[i].grid(row=0, column=i, padx=10)
 
     # Info label
-    infoLabel['text'] = f'Info label for player {currentPlayerIndex}'
+    # infoLabel['text'] = f'Info label for player {currentPlayerIndex}'
+    infoLabel['text'] = f'Current score for Player {currentPlayerIndex}: {players[currentPlayerIndex].score}'
 
 if __name__ == "__main__":
 
     # Check command line
     if len(sys.argv) != 2:
-        print(f"USAGE: python3 scrabble.py dict.txt")
+        print(f"[FAIL] USAGE: python3 scrabble.py dict.txt")
         exit(0)
 
     # Parse the dictionary specified as parameter
@@ -616,11 +585,11 @@ if __name__ == "__main__":
         reg = re.compile(r'^[a-z]+$')
         for s in acceptedWords:
             if not reg.match(s):
-                print(f"Word '{s}' from dict is not a word!")
+                print(f"[WARNING] Word '{s}' from dict is not a word!")
                 exit(0)
     
-    print("Dictionary:")
-    print(acceptedWords)
+    # print("Dictionary:")
+    # print(acceptedWords)
 
     # Create the players
     players = [Player(0), Player(1)]
@@ -667,7 +636,7 @@ if __name__ == "__main__":
 
     # Information box for different messages
     frameInfo = Frame(root, pady=20)
-    infoLabel = Label(frameInfo, text='Info box', font = ('Arial', 15))
+    infoLabel = Label(frameInfo, text='Current score for Player 0: 0', font = ('Arial', 15))
     infoLabel.pack()
     
     # Buttons frame
@@ -696,7 +665,7 @@ if __name__ == "__main__":
     def endGame():
         os.system("cls")
         for i in range(len(players)):
-            print(f"Player {i} scored {players[i].score}!")
+            print(f"[INFO] Player {i} scored {players[i].score}!")
         root.destroy()
 
     root.protocol("WM_DELETE_WINDOW", endGame)
