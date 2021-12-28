@@ -241,25 +241,50 @@ def canUnlock(i, j):
     if size == 0:
         return True
 
+    if size == 1:
+        ii = currentWord[0]['posI']
+        jj = currentWord[0]['posJ']
+
+        # Left to right
+        if ii == i:
+            # Return True only if there are no empty spaces from the last placed letter of the word to the current position
+            for _ in range(jj, j):
+                if board[ii][_]['text'] == ' ':
+                    return False
+            
+            return True
+        
+        # Top to bottom
+        if jj == j:
+            for _ in range(ii, i):
+                if board[_][jj]['text'] == ' ':
+                    return False
+            return True
+        return False
+    
+    # Last added letter
     ii = currentWord[size - 1]['posI']
     jj = currentWord[size - 1]['posJ']
 
+    # First added letter
+    iii = currentWord[0]['posI']
+    jjj = currentWord[0]['posJ']
+
     # Left to right
-    if ii == i:
+    if ii == i and iii == i:
         # Return True only if there are no empty spaces from the last placed letter of the word to the current position
         for _ in range(jj, j):
-            if board[ii][_] == ' ':
+            if board[ii][_]['text'] == ' ':
                 return False
         
         return True
     
     # Top to bottom
-    if jj == j:
+    if jj == j and jjj == j:
         for _ in range(ii, i):
-            if board[_][jj] == ' ':
+            if board[_][jj]['text'] == ' ':
                 return False
         return True
-    
     return False
 
 # Select a letter from the available ones
@@ -473,13 +498,6 @@ def checkWord():
     # If the word was correct, end the turn
     endTurn(currentScore - previousScore)
     previousScore = currentScore
-
-# Displays the board and other info associated with the selected player
-def displayPlayer(playerIndex):
-    pass
-    # Display player's name
-
-    # Display player's board
 
 # Updates the board of the current player if at least 7 letters remain in the bag
 # Else it does nothing
