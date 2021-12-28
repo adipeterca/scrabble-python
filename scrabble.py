@@ -273,7 +273,7 @@ def selectLetter(buttonIndex):
     letterButtons[buttonIndex].grid_forget()
     
     # Delete the letter
-    players[currentPlayerIndex].letters.pop(buttonIndex)
+    players[currentPlayerIndex].letters[buttonIndex] = ''
 
     # Make all other buttons unclickable and make the board clickable
     for i in range(len(letterButtons)):
@@ -324,52 +324,42 @@ def checkWord():
     randomButton['state'] = 'normal'
     skipButton['state'] = 'normal'
 
-    # The first word must be at least 2 letters in length
-    if turns == 0 and len(currentWord) < 2:
-        infoLabel['text'] = 'First word must be at least 2 letters in length!'
+    def returnGameBoard():
+        global currentWord
 
         # Return all the game pieces to the player's board
         for e, widget in enumerate(letterButtons):
             if not widget.winfo_ismapped():
                 widget.grid(row=0, column=e, padx=10)
+            
+            # Remake the original letter list
+            players[currentPlayerIndex].letters[e] = letterButtons[e]['text']
+
+        
+            
         # Remove the pieces from the game board
         for e in range(len(currentWord)):
             board[currentWord[e]['posI']][currentWord[e]['posJ']]['text'] = ' '
         
         # Clear the current word variable
         currentWord = []
+
+    # The first word must be at least 2 letters in length
+    if turns == 0 and len(currentWord) < 2:
+        infoLabel['text'] = 'First word must be at least 2 letters in length!'
+        returnGameBoard()
         return
 
     # H8 must be covered! (from the first round)
     if board[7][7]['text'] == ' ':
         infoLabel['text'] = 'You must cover the central square!'
-
-        # Return all the game pieces to the player's board
-        for e, widget in enumerate(letterButtons):
-            if not widget.winfo_ismapped():
-                widget.grid(row=0, column=e, padx=10)
-        # Remove the pieces from the game board
-        for e in range(len(currentWord)):
-            board[currentWord[e]['posI']][currentWord[e]['posJ']]['text'] = ' '
-        
-        # Clear the current word variable
-        currentWord = []
+        returnGameBoard()
         return
 
     # If it is not the first word, it can be at least 1 letter in length
     if len(currentWord) < 1:
         infoLabel['text'] = 'To apply a word it needs to have at least 2 letters!'
-
-        # Return all the game pieces to the player's board
-        for e, widget in enumerate(letterButtons):
-            if not widget.winfo_ismapped():
-                widget.grid(row=0, column=e, padx=10)
-        # Remove the pieces from the game board
-        for e in range(len(currentWord)):
-            board[currentWord[e]['posI']][currentWord[e]['posJ']]['text'] = ' '
-        
-        # Clear the current word variable
-        currentWord = []
+        returnGameBoard()
         return
 
     # All words except the first one MUST be adjucent
@@ -410,17 +400,7 @@ def checkWord():
         # Cannot be a single word (not surrounded by at least one other word)
         if not hasWordNextToIt:
             infoLabel['text'] = 'Words must be adjucent to each other'
-
-            # Return all the game pieces to the player's board
-            for e, widget in enumerate(letterButtons):
-                if not widget.winfo_ismapped():
-                    widget.grid(row=0, column=e, padx=10)
-            # Remove the pieces from the game board
-            for e in range(len(currentWord)):
-                board[currentWord[e]['posI']][currentWord[e]['posJ']]['text'] = ' '
-            
-            # Clear the current word variable
-            currentWord = []
+            returnGameBoard()
             return
     
     # Get a list of all words from the gameboard
@@ -484,17 +464,7 @@ def checkWord():
         if not exists:
             # print(f"Word '{s1}' does not exist in the dictionary!")
             infoLabel['text'] = f"Word '{s1}' does not exist in the dictionary!"
-
-            # Return all the game pieces to the player's board
-            for e, widget in enumerate(letterButtons):
-                if not widget.winfo_ismapped():
-                    widget.grid(row=0, column=e, padx=10)
-            # Remove the pieces from the game board
-            for e in range(len(currentWord)):
-                board[currentWord[e]['posI']][currentWord[e]['posJ']]['text'] = ' '
-            
-            # Clear the current word variable
-            currentWord = []
+            returnGameBoard()
             return
     
     # Clear the current word variable
@@ -556,8 +526,10 @@ def endTurn(score = 0):
     print(f"[DEBUG] Started turn {turns}!")
     
     # Save the current board for the current player
-    # First, make sure there are 7 letters on the board
-    print(players[currentPlayerIndex].letters)
+    # First, remove the used letters (marked as null - '')
+    players[currentPlayerIndex].letters = [e for e in players[currentPlayerIndex].letters if e != '']
+
+    # Secord, make sure there are 7 letters on the board
     while len(players[currentPlayerIndex].letters) < 7:
         if len(bag) != 0:
             players[currentPlayerIndex].letters.append(getRandomLetter())
