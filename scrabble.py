@@ -540,14 +540,20 @@ def endTurn(score = 0):
 
     print(f"[DEBUG] Player {currentPlayerIndex} ended his turn!")
     print(f"[DEBUG] Ended turn {turns}!")
-    turns += 1
-    print(f"[DEBUG] Started turn {turns}!")
-    
+
+    # Save the score
+    players[currentPlayerIndex].score += score
+
     # Save the current board for the current player
     # First, remove the used letters (marked as null - '')
     players[currentPlayerIndex].letters = [e for e in players[currentPlayerIndex].letters if e != '']
 
-    # Secord, make sure there are 7 letters on the board
+    # The player played all his letters and the bag is empty - the game ends
+    if len(players[currentPlayerIndex].letters) == 0 and len(bag) == 0:
+        endGameGUI()
+        return
+
+     # Secord, make sure there are 7 letters on the board
     while len(players[currentPlayerIndex].letters) < 7:
         if len(bag) != 0:
             players[currentPlayerIndex].letters.append(getRandomLetter())
@@ -556,9 +562,11 @@ def endTurn(score = 0):
             print(f"[DEBUG] No more letters in bag for player {currentPlayerIndex}!")
             break
 
-    # Save the score
-    players[currentPlayerIndex].score += score
     print(f"[DEBUG] Player {currentPlayerIndex} got score {score} for this round!")
+
+    turns += 1
+    print(f"[DEBUG] Started turn {turns}!")
+    
 
     # Display the next player
     currentPlayerIndex = (currentPlayerIndex + 1) % len(players)
