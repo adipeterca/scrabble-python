@@ -653,7 +653,7 @@ if __name__ == "__main__":
 
     # Information box for different messages
     frameInfo = Frame(root, pady=20)
-    infoLabel = Label(frameInfo, text='Current score for Player 0: 0', font = ('Arial', 15))
+    infoLabel = Label(frameInfo, text='Current score for Player 0: 0', font=('Arial', 15))
     infoLabel.pack()
     
     # Buttons frame
@@ -685,10 +685,25 @@ if __name__ == "__main__":
             print(f"[INFO] Player {i} scored {players[i].score}!")
         root.destroy()
 
-    root.protocol("WM_DELETE_WINDOW", endGame)
-    root.mainloop()
+    def endGameGUI():
+        root.destroy()
 
-# Left TODO
-# 1. sa poti adauga cuvinte doar daca sunt adiacente cu cele deja existente (aproape facut, trebuie testat bine)
-# 2. sa poti pune o litera pentru un cuvant DUPA una deja existenta (de ex, daca scrii [- - - A B c - -] si urmeaza sa pui D, sa o poti face (c deja exista))
-# 3. testare foarte detaliata, in rest totul e facut
+        endWindow = Tk()
+        endWindow.title("Game ended!")
+        endWindow.geometry("300x300")
+
+        playerLabels = []
+        winner = 0
+        for i in range(len(players)):
+            playerLabels.append(Label(endWindow, text=f"Player {i} has a score of {players[i].score}!", font=('Arial', 13), pady=5))
+
+            # Get the winner
+            if players[winner].score < players[i].score:
+                winner = i
+
+        Label(endWindow, text=f"Hurray! Player {winner} won!", font=("Arial", 15), pady=40).pack()
+        for _ in playerLabels:
+            _.pack()
+        
+    root.protocol("WM_DELETE_WINDOW", endGameGUI)
+    root.mainloop()
