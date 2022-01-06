@@ -6,7 +6,17 @@ from tkinter import *
 from functools import partial
 
 class Player:
-    def __init__(self, name = 0):
+    """
+    The Player class is the default structure used for keeping information
+    strictly related to a player (like score, name, rack etc.) in one place.
+    """
+    def __init__(self, name=0):
+        """
+        Constructor function.
+        Takes an integer number as name (default is 0) to differentiate between objects of this class. 
+
+        :param name: integer number to be assigned as name (default is 0)
+        """
         # Set the initial score
         self.score = 0
 
@@ -96,9 +106,16 @@ acceptedWords = []
 # Used in calculating the current score of the words formed
 previousScore = 0
 
-# Returns the word value
 def getWordValue(i1, j1, i2, j2):
-
+    """
+    Function for returning a word value.
+    
+    :param i1: position on the X axis for the first letter of the word
+    :param j1: position on the Y axis for the first letter of the word
+    :param i2: position on the X axis for the last letter of the word
+    :param j2: position on the Y axis for the last letter of the word
+    :return: the value of the word if it is correct, 0 otherwise
+    """
     global letterValue
 
     doubleWordValue = False
@@ -158,12 +175,11 @@ def getWordValue(i1, j1, i2, j2):
         return 3 * value
     return value
 
-# Color corrections
-#   Light red : double word value #ff4fc4
-#   Dark red : triple word value #f00c4d
-#   Light blue : double letter value #5e79ff
-#   Dark blue : triple letter value #1130cf
-def colorCorrections(board):
+def colorCorrections():
+    """
+    Internal function used for coloring the game board.
+    """
+    global board
     board[0][0]['bg'] = '#f00c4d'
     board[0][7]['bg'] = '#f00c4d'
     board[0][14]['bg'] = '#f00c4d'
@@ -230,9 +246,15 @@ def colorCorrections(board):
     board[14][3]['bg'] = '#5e79ff'
     board[14][11]['bg'] = '#5e79ff'
 
-# Unlocks only the buttons on the board that represent a right placement for the next letter (top-down or right-left)
-# Meaning it can only unlock the next available position (it skips over already placed letters)
 def canUnlock(i, j):
+    """
+    Unlocks only the buttons on the board that represent a right placement for the next letter (top-down or right-left).
+
+    :param i: the position on the X axis for the button that is checked
+    :param j: the position on the Y axis for the button that is checked
+    :return: True if it can be placed, False otherwise
+    """
+
     global currentWord
 
     size = len(currentWord)
@@ -287,8 +309,13 @@ def canUnlock(i, j):
         return True
     return False
 
-# Select a letter from the available ones
 def selectLetter(buttonIndex):
+    """
+    Callback function for the rack buttons.
+
+    It's called when a letter is selected.
+    :param buttonIndex: the index for which button in the rack was pressed
+    """
     global valueSelected, applyButton, randomButton, skipButton, players, currentPlayerIndex
     # Get the selected value
     valueSelected = letterButtons[buttonIndex]['text']
@@ -317,8 +344,14 @@ def selectLetter(buttonIndex):
 
     # print(f"Selected value {valueSelected} from button index {buttonIndex}")
 
-# Actually puts the letter on the board
 def putLetter(buttonIndexI, buttonIndexJ):
+    """
+    Internal function for updating a value on the board.
+
+    It's called after a letter was selected from the rack and a button on the board was pressed.
+    :param buttonIndexI: index of the button on the X axis
+    :param buttonIndexJ: index of the button on the Y axis
+    """
     global valueSelected, currentWord, applyButton
 
     board[buttonIndexI][buttonIndexJ]['text'] = valueSelected
@@ -339,10 +372,13 @@ def putLetter(buttonIndexI, buttonIndexJ):
         
     # print(f"Applied value {valueSelected} to button[{buttonIndexI}][{buttonIndexJ}]")
 
-# Called when 'Apply word' is clicked
-# If the word is correct (alongside all the other words formed), it returns a score
-# If the word is not correct, it returns the letters from the game board to the player's board
 def checkWord():
+    """
+    Callbacak function for when 'Apply word' is clicked.
+
+    :return: if the word is correct (alongside all the other words formed), it returns a score,
+                otherwise returns the letters to the rack.
+    """
     global acceptedWords, infoLabel, currentWord, randomButton, skipButton, previousScore, turns
 
     # Enable Random/Skip buttons
@@ -499,9 +535,12 @@ def checkWord():
     endTurn(currentScore - previousScore)
     previousScore = currentScore
 
-# Updates the board of the current player if at least 7 letters remain in the bag
-# Else it does nothing
 def getRandomBoard():
+    """
+    Callback function for the "Random" button.
+
+    Updates the board of the current player if at least 7 letters remain in the bag, otherwise returns nothing.
+    """
     global bag, players, currentPlayerIndex
     
     if len(bag) < 7:
@@ -524,8 +563,12 @@ def getRandomBoard():
 
     endTurn()
 
-# Returns a random letter from the bag
 def getRandomLetter():
+    """
+    Returns a random letter from the bag.
+
+    :return: a random letter iff there are any left in the bag, None otherwise
+    """
     global bag
 
     if len(bag) == 0:
@@ -534,8 +577,12 @@ def getRandomLetter():
     random.shuffle(bag)
     return bag.pop()
 
-# Ends the current turn and updates the GUI for the next player (playerLabel, letterButtons and infoLabel)
 def endTurn(score = 0):
+    """
+    Function called by all buttons after they finished their specific callbacks.
+
+    Ends the current turn and updates the GUI for the next player (playerLabel, letterButtons and infoLabel).
+    """
     global currentPlayerIndex, letterButtons, turns
 
     print(f"[DEBUG] Player {currentPlayerIndex} ended his turn!")
@@ -647,7 +694,7 @@ if __name__ == "__main__":
             # At first, all buttons from the board are disabled
             board[i][j]['state'] = 'disabled'
 
-    colorCorrections(board)
+    colorCorrections()
 
     # Frame displaying the current player
     framePlayer = Frame(root, pady=20)
