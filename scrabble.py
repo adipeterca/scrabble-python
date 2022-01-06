@@ -606,8 +606,24 @@ if __name__ == "__main__":
     # print("Dictionary:")
     # print(acceptedWords)
 
+    # Get number of players
+    while True:
+        try:
+            s = input("Number of players (2, 3 or 4): ")
+            numberOfPlayers = int(s)
+            if numberOfPlayers in [2, 3, 4]:
+                print(f"Selected {numberOfPlayers} players! The game will begin shortly...")
+                break
+            else:
+                raise Exception   
+        except:
+            print(f"Invalid input '{s}'. Try again!")
+
     # Create the players
-    players = [Player(0), Player(1)]
+    players = []
+    for i in range(numberOfPlayers):
+        players.append(Player(i))
+    # players = [Player(0), Player(1)]
     currentPlayerIndex = 0
 
     # Draw the main window
