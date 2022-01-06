@@ -677,12 +677,16 @@ if __name__ == "__main__":
             if name not in alreadyChosen:
                 break
             print(f"Name {name} already exists!")
+
+        # Append the chosen name
         alreadyChosen.append(name)
+
+        # Create the player
         if name != "":
             players.append(Player(name))
         else:
             players.append(Player())
-    # players = [Player(0), Player(1)]
+    
     currentPlayerIndex = 0
 
     # Draw the main window
