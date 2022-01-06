@@ -10,12 +10,12 @@ class Player:
     The Player class is the default structure used for keeping information
     strictly related to a player (like score, name, rack etc.) in one place.
     """
-    def __init__(self, name=0):
+    def __init__(self, name="scrabble"):
         """
         Constructor function.
-        Takes an integer number as name (default is 0) to differentiate between objects of this class. 
+        Takes a string as name (default is "scrabble") to differentiate between objects of this class. 
 
-        :param name: integer number to be assigned as name (default is 0)
+        :param name: string to be assigned as name (default is "scrabble")
         """
         # Set the initial score
         self.score = 0
@@ -585,7 +585,7 @@ def endTurn(score = 0):
     """
     global currentPlayerIndex, letterButtons, turns
 
-    print(f"[DEBUG] Player {currentPlayerIndex} ended his turn!")
+    print(f"[DEBUG] Player {players[currentPlayerIndex].name} ended his turn!")
     print(f"[DEBUG] Ended turn {turns}!")
 
     # Save the score
@@ -606,10 +606,10 @@ def endTurn(score = 0):
             players[currentPlayerIndex].letters.append(getRandomLetter())
             print(f"[DEBUG] Added letter {players[currentPlayerIndex].letters[-1]} to the list!")
         else:
-            print(f"[DEBUG] No more letters in bag for player {currentPlayerIndex}!")
+            print(f"[DEBUG] No more letters in bag for player {players[currentPlayerIndex].name}!")
             break
 
-    print(f"[DEBUG] Player {currentPlayerIndex} got score {score} for this round!")
+    print(f"[DEBUG] Player {players[currentPlayerIndex].name} got score {score} for this round!")
 
     turns += 1
     print(f"[DEBUG] Started turn {turns}!")
@@ -619,7 +619,7 @@ def endTurn(score = 0):
     currentPlayerIndex = (currentPlayerIndex + 1) % len(players)
 
     # Display the label
-    playerLabel['text'] = f"Player {currentPlayerIndex} board"
+    playerLabel['text'] = f"Player {players[currentPlayerIndex].name} board"
 
     # Display the letters
     for i in range(7):
@@ -632,7 +632,7 @@ def endTurn(score = 0):
 
     # Info label
     # infoLabel['text'] = f'Info label for player {currentPlayerIndex}'
-    infoLabel['text'] = f'Current score for Player {currentPlayerIndex}: {players[currentPlayerIndex].score}'
+    infoLabel['text'] = f'Current score for Player {players[currentPlayerIndex].name}: {players[currentPlayerIndex].score}'
 
 if __name__ == "__main__":
 
@@ -668,8 +668,20 @@ if __name__ == "__main__":
 
     # Create the players
     players = []
+    alreadyChosen = ["scrabble"]
     for i in range(numberOfPlayers):
-        players.append(Player(i))
+        
+        # Execute until a name that is not used was given
+        while True:
+            name = input(f"Name for player {i + 1}: ")
+            if name not in alreadyChosen:
+                break
+            print(f"Name {name} already exists!")
+        alreadyChosen.append(name)
+        if name != "":
+            players.append(Player(name))
+        else:
+            players.append(Player())
     # players = [Player(0), Player(1)]
     currentPlayerIndex = 0
 
@@ -698,7 +710,7 @@ if __name__ == "__main__":
 
     # Frame displaying the current player
     framePlayer = Frame(root, pady=20)
-    playerLabel = Label(framePlayer, text="Player 0 board", font=('Arial', 25))
+    playerLabel = Label(framePlayer, text=f"Player {players[0].name} board", font=('Arial', 25))
     playerLabel.pack()
 
     # Frame containing the letters
@@ -714,7 +726,7 @@ if __name__ == "__main__":
 
     # Information box for different messages
     frameInfo = Frame(root, pady=20)
-    infoLabel = Label(frameInfo, text='Current score for Player 0: 0', font=('Arial', 15))
+    infoLabel = Label(frameInfo, text=f'Current score for Player {players[0].name}: 0', font=('Arial', 15))
     infoLabel.pack()
     
     # Buttons frame
@@ -743,7 +755,7 @@ if __name__ == "__main__":
     def endGame():
         os.system("cls")
         for i in range(len(players)):
-            print(f"[INFO] Player {i} scored {players[i].score}!")
+            print(f"[INFO] Player {players[i].name} scored {players[i].score}!")
         root.destroy()
 
     def endGameGUI():
@@ -756,13 +768,13 @@ if __name__ == "__main__":
         playerLabels = []
         winner = 0
         for i in range(len(players)):
-            playerLabels.append(Label(endWindow, text=f"Player {i} has a score of {players[i].score}!", font=('Arial', 13), pady=5))
+            playerLabels.append(Label(endWindow, text=f"Player {players[i].name} has a score of {players[i].score}!", font=('Arial', 13), pady=5))
 
             # Get the winner
             if players[winner].score < players[i].score:
                 winner = i
 
-        Label(endWindow, text=f"Hurray! Player {winner} won!", font=("Arial", 15), pady=40).pack()
+        Label(endWindow, text=f"Hurray! Player {players[winner].name} won!", font=("Arial", 15), pady=40).pack()
         for _ in playerLabels:
             _.pack()
         
